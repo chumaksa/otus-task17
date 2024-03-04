@@ -1,0 +1,45 @@
+---
+# Configure all
+- name: Configure all
+  hosts: all
+  become: true
+  tasks:
+  - name: Install package epel-release
+    yum:
+      name: epel-release
+      state: present
+      
+  - name: Install borgbackup
+    yum:
+      name: borgbackup
+      state: latest
+
+# Configure backups
+- name: Configure backups
+  hosts: backup
+  become: true
+
+  tasks:
+    - parted:
+        device: /dev/sdb
+        number: 1
+        state: present
+       
+    - filesystem:
+        fstype: xfs
+        dev: /dev/sdb1
+       
+    - mount:
+        fstype: xfs
+        src: /dev/sdb1
+        path: /var/backup
+        state: mounted
+        
+    - user:
+        name: borg
+        home: /home/borg 
+        
+    - file:
+        path: /var/backup/
+        owner: borg
+        group: borg     
